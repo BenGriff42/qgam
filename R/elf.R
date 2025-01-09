@@ -124,15 +124,17 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     tau <- get(".qu")
     co <- get(".co")
     
+    mu <- drop(mu)
     sig <- exp(theta)
-    lam <- mean(co / sig)
-    sig <- co / lam
+    lam <- co
     
-    z <- (y - drop(mu)) / sig
+    term <-
+      (1 - tau)*lam*log1p(-tau) +
+      lam*tau*log(tau) -
+      (1 - tau)*(y - mu) +
+      lam*log1pexp((y - mu) / lam)
     
-    term <- (1-tau)*lam*log1p(-tau) + lam*tau*log(tau) - (1-tau)*z + lam*log1pexp( z / lam )
-    
-    2 * wt * term
+    2 * wt * term / sig
   }
   
   Dd <- function(y, mu, theta, wt, level=0) {
@@ -143,41 +145,33 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     
     ## derivatives of the deviance...
     sig <- exp(theta)
-    lam <- mean(co / sig)
-    sig <- co / lam
+    lam <- co
     
-    z <- (y - mu) / sig
+    z <- (y - mu) / lam
     
-    
-    dl <- dlogis(y-mu, 0, lam*sig)
-    pl <- plogis(y-mu, 0, lam*sig)
+    der <- sigmoid(z, deriv = TRUE)
     
     r <- list()
     ## get the quantities needed for IRLS. 
     ## Dmu2eta2 is deriv of D w.r.t mu twice and eta twice,
     ## Dmu is deriv w.r.t. mu once, etc...
-    r$Dmu <- - 2 * wt * ( (pl - 1 + tau) / sig )
-    r$Dmu2 <- 2 * wt * ( dl / sig )
+    r$Dmu <- -2 * wt * ( (der$D0 - 1 + tau) / sig )
+    r$Dmu2 <- 2 * wt * ( der$D1 / (sig * lam) )
     # r$EDmu2 <- 2 * wt * ((1-tau)*tau / (lam + 1)) / sig^2 ## exact (or estimated) expected weight #### XXX ####
     r$EDmu2 <- r$Dmu2 # It make more sense using the observed information everywhere
     if (level>0) { ## quantities needed for first derivatives
-      zl <- z / lam
-      der <- sigmoid(zl, deriv = TRUE)
       
-      r$Dth <- - 2 * wt * sig * ( z * (pl - 1 + tau) / sig ) 
-      r$Dmuth <- 2 * wt * ( ((y-mu)*dl + pl - 1 + tau) / sig )
-      r$Dmu3 <- - (2 * wt * ( der$D2 / (lam * sig) )) / (lam*sig^2) 
-      
-      D2mDt <- ((zl*der$D2 + 2*der$D1) / (lam*sig)) / (sig^2)
-      r$Dmu2th <- - 2 * wt * sig * D2mDt
-    } 
+      r$Dth <- -dev.resids(y, mu = mu, wt = wt, theta = theta)
+      r$Dmuth <- -r$Dmu
+      r$Dmu3 <- -(2 * wt * der$D2) / (sig * lam^2)
+      r$Dmu2th <- -r$Dmu2
+    }
     if (level>1) { ## whole damn lot
-      r$Dmu4 <- (2 * wt * ( der$D3 / (lam * sig^2) )) / (lam^2 * sig^2)
-      r$Dth2 <- - 2 * wt *  ( z * (pl - 1 + tau)  + (2*z*(1 - tau - pl - 0.5 * (y-mu)*dl)) )
-      r$Dmuth2 <- 2 * wt * ( ((y-mu)*dl + pl - 1 + tau) / sig - 
-                               (2*(der$D0 - 1 + tau) + 4*zl*der$D1 + zl^2*der$D2) / sig )
-      r$Dmu2th2 <- - 2 * wt * (sig * D2mDt - (zl^2*der$D3 + 6*zl*der$D2 + 6*der$D1) / (lam*sig^2))
-      r$Dmu3th <- 2 * wt * ( (zl*der$D3 + 3*der$D2) / (lam * sig) ) / (lam * sig^2)
+      r$Dmu4 <- (2 * wt * der$D3) / (sig * lam^3)
+      r$Dth2 <- -r$Dth
+      r$Dmuth2 <- r$Dmu
+      r$Dmu2th2 <- r$Dmu2
+      r$Dmu3th <- -r$Dmu3
     }
     r
   }
@@ -187,12 +181,13 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     sig <- exp(theta)
     tau <- get(".qu")
     co <- get(".co")
-    lam <- mean(co / sig)
-    sig <- co / lam
+    lam <- co
+    mu <- drop(mu)
     
-    z <- (y - drop(mu)) / sig
-    
-    term <- - (1-tau) * z + lam * log1pexp( z / lam ) + log( sig * lam * beta(lam*(1-tau), tau*lam) )
+    term <-
+      -(1 - tau) * (y - mu) / sig +
+      lam * log1pexp( (y - mu) / lam ) / sig +
+      log(lam * beta(lam * (1 - tau) / sig, tau * lam / sig))
     
     2 * sum(term * wt)
   }
@@ -201,16 +196,29 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     tau <- get(".qu")
     co <- get(".co")
     sig <- exp(theta)
-    lam <- mean(co / sig)
-    sig <- co / lam
+    lam <- co
     
     ## the log saturated likelihood function.
-    ls <- sum( w * ((1-tau)*lam*log1p(-tau) + lam*tau*log(tau) - log(lam * sig * beta(lam*(1-tau), lam*tau))) )
+    ls <- sum(w * (
+      (1 - tau) * lam * log1p(-tau) / sig +
+        lam * tau * log(tau) / sig -
+        log(lam * beta(lam * (1 - tau) / sig, lam * tau / sig))
+    ))
     
-    #lsth <- - sig * sum(w / sig)
-    lsth <- - sum(w)
+    lsth <-
+      (
+        lam * (1 - tau) * digamma(lam * (1 - tau) / sig) +
+          lam * tau * digamma(lam * tau / sig) -
+          lam * digamma(lam / sig)
+      ) / sig
     
-    lsth2 <- 0
+    lsth2 <-
+      -lsth -
+      (
+        lam^2 * (1 - tau)^2 * trigamma(lam * (1 - tau) / sig) +
+          lam^2 * tau*2 * trigamma(lam * tau / sig) -
+          lam^2 * trigamma(lam / sig)
+      ) / sig
     
     list(ls=ls, ## saturated log likelihood
          lsth1=lsth, ## first deriv vector w.r.t theta - last element relates to scale, if free
