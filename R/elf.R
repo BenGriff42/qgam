@@ -127,6 +127,7 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     mu <- drop(mu)
     sig <- exp(theta)
     lam <- co
+    sig <- sig * lam / mean(lam)
     
     term <-
       (1 - tau)*lam*log1p(-tau) +
@@ -146,6 +147,7 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     ## derivatives of the deviance...
     sig <- exp(theta)
     lam <- co
+    sig <- sig * lam / mean(lam)
     
     z <- (y - mu) / lam
     
@@ -182,6 +184,7 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     tau <- get(".qu")
     co <- get(".co")
     lam <- co
+    sig <- sig * lam / mean(lam)
     mu <- drop(mu)
     
     term <-
@@ -197,6 +200,7 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     co <- get(".co")
     sig <- exp(theta)
     lam <- co
+    sig <- sig * lam / mean(lam)
     
     ## the log saturated likelihood function.
     ls <- sum(w * (
