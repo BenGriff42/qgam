@@ -149,9 +149,7 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     lam <- co
     sig <- sig * lam / mean(lam)
     
-    z <- (y - mu) / lam
-    
-    der <- sigmoid(z, deriv = TRUE)
+    der <- sigmoid((y - mu) / lam, deriv = TRUE)
     
     r <- list()
     ## get the quantities needed for IRLS. 
@@ -163,7 +161,15 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     r$EDmu2 <- r$Dmu2 # It make more sense using the observed information everywhere
     if (level>0) { ## quantities needed for first derivatives
       
-      r$Dth <- -dev.resids(y, mu = mu, wt = wt, theta = theta)
+      # r$Dth <- -dev.resids(y, mu = mu, wt = wt, theta = theta)
+      
+      term <-
+        (1 - tau)*lam*log1p(-tau) +
+        lam*tau*log(tau) -
+        (1 - tau)*(y - mu) +
+        lam*log1pexp((y - mu) / lam)
+      
+      r$Dth <- -2 * wt * term / sig
       r$Dmuth <- -r$Dmu
       r$Dmu3 <- -(2 * wt * der$D2) / (sig * lam^2)
       r$Dmu2th <- -r$Dmu2
@@ -210,19 +216,21 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     ))
     
     lsth <-
-      (
-        lam * (1 - tau) * digamma(lam * (1 - tau) / sig) +
-          lam * tau * digamma(lam * tau / sig) -
-          lam * digamma(lam / sig)
-      ) / sig
+      sum(w * (
+        -(1 - tau) * log(1 - tau) -
+          tau * log(tau) +
+          (1 - tau) * digamma(lam * (1 - tau) / sig) +
+          tau * digamma(lam * tau / sig) -
+          digamma(lam / sig)
+      ) * lam / sig)
     
     lsth2 <-
-      -lsth -
+      sum(w * (-lsth -
       (
-        lam^2 * (1 - tau)^2 * trigamma(lam * (1 - tau) / sig) +
-          lam^2 * tau*2 * trigamma(lam * tau / sig) -
-          lam^2 * trigamma(lam / sig)
-      ) / sig
+        (1 - tau)^2 * trigamma(lam * (1 - tau) / sig) +
+          tau*2 * trigamma(lam * tau / sig) -
+          trigamma(lam / sig)
+      ) * lam^2 / sig^2))
     
     list(ls=ls, ## saturated log likelihood
          lsth1=lsth, ## first deriv vector w.r.t theta - last element relates to scale, if free
