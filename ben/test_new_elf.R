@@ -6,7 +6,7 @@
 
 # set.seed(4)
 n <- 1e4
-qu <- 0.1
+qu <- 0.99
 
 dat <- mgcv::gamSim(1, n = n, dist = "normal", scale = 10)
 form <- y ~ s(x0) + s(x1) + s(x2) + s(x3)

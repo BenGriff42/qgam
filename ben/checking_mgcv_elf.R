@@ -23,14 +23,12 @@ mObj1 <- mObj
 mObj1$family$putTheta(theta)
 mObj1$family$putCo(co)
 
-debugonce(mgcv:::gam.fit4)
 m1 <- do.call(gam, call_list1)
 
 mObj2 <- mObj.e
 mObj2$family$putTheta(theta)
 mObj2$family$putCo(co)
 
-debugonce(mgcv:::gam.fit4)
 m2 <- do.call(gam, call_list2)
 
 m1$iter
