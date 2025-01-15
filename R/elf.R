@@ -149,19 +149,19 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     lam <- co
     sig <- sig * lam / mean(lam)
     
-    der <- sigmoid((y - mu) / lam, deriv = TRUE)
+    dl <- dlogis(y-mu, 0, lam)
+    pl <- plogis(y-mu, 0, lam)
     
     r <- list()
     ## get the quantities needed for IRLS. 
     ## Dmu2eta2 is deriv of D w.r.t mu twice and eta twice,
     ## Dmu is deriv w.r.t. mu once, etc...
-    r$Dmu <- -2 * wt * ( (der$D0 - 1 + tau) / sig )
-    r$Dmu2 <- 2 * wt * ( der$D1 / (sig * lam) )
+    r$Dmu <- -2 * wt * ( (pl - 1 + tau) / sig )
+    r$Dmu2 <- 2 * wt * ( dl / (sig * lam) )
     # r$EDmu2 <- 2 * wt * ((1-tau)*tau / (lam + 1)) / sig^2 ## exact (or estimated) expected weight #### XXX ####
     r$EDmu2 <- r$Dmu2 # It make more sense using the observed information everywhere
     if (level>0) { ## quantities needed for first derivatives
-      
-      # r$Dth <- -dev.resids(y, mu = mu, wt = wt, theta = theta)
+      der <- sigmoid((y - mu) / lam, deriv = TRUE)
       
       term <-
         (1 - tau)*lam*log1p(-tau) +

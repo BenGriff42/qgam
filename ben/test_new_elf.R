@@ -8,7 +8,7 @@
 n <- 1e4
 qu <- 0.1
 
-dat <- mgcv::gamSim(1,n=n,dist="normal",scale=10)
+dat <- mgcv::gamSim(1, n = n, dist = "normal", scale = 10)
 form <- y ~ s(x0) + s(x1) + s(x2) + s(x3)
 
 fit.elf <- qgam.old::qgam(form = form, data = dat, qu = qu, discrete = TRUE)
@@ -24,6 +24,8 @@ abline(0,1,col=2)
 c(fit.elf$aic, fit.nelf$aic)
 c(fit.elf$family$getTheta(), fit.nelf$family$getTheta())
 c(fit.elf$family$getCo(), fit.nelf$family$getCo())
+
+
 
 
 dat$y <- dat$y * ((dat$x2) * 3 / 5 + 0.7)
