@@ -6,7 +6,7 @@
 
 # set.seed(4)
 n <- 1e4
-qu <- 0.99
+qu <- 0.01
 
 dat <- mgcv::gamSim(1, n = n, dist = "normal", scale = 10)
 form <- y ~ s(x0) + s(x1) + s(x2) + s(x3)
@@ -18,10 +18,8 @@ sum( (qnorm(qu, dat$f, 10) - fit.elf$fitted.values)^2 )
 sum( (qnorm(qu, dat$f, 10) - fit.nelf$fitted.values)^2 )
 
 plot(fit.elf$fitted.values, fit.nelf$fitted.values)
-plot(qnorm(qu, dat$f, 10), fit.nelf$fitted.values)
 abline(0,1,col=2)
 
-c(fit.elf$aic, fit.nelf$aic)
 c(fit.elf$family$getTheta(), fit.nelf$family$getTheta())
 c(fit.elf$family$getCo(), fit.nelf$family$getCo())
 
@@ -40,5 +38,5 @@ sum( (qnorm(qu, dat$f, 10) - fit.nelf$fitted.values)^2 )
 plot(fit.elf$fitted.values, fit.nelf$fitted.values)
 abline(0,1,col=2)
 
-fit.elf$aic
-fit.nelf$aic
+c(fit.elf$family$getTheta(), fit.nelf$family$getTheta())
+sum(abs(fit.elf$family$getCo()- fit.nelf$family$getCo()))

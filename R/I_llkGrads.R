@@ -31,8 +31,7 @@
   
   sig <- exp( theta )
   lam <- co
-  sig <- sig * lam / mean(lam)
-  
+
   if( is.null(offset) ){
     offset <- numeric( n )  
   }
