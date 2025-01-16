@@ -212,26 +212,26 @@ elf <- function (theta = NULL, link = "identity", qu, co) {
     ls <- sum(w * (
       (1 - tau) * lam * log1p(-tau) / sig +
         lam * tau * log(tau) / sig -
-        log(lam * beta(lam * (1 - tau) / sig, lam * tau / sig))
+        log(lam) - lbeta(lam * (1 - tau) / sig, lam * tau / sig)
     ))
 
     lsth <-
       sum(w * (
-        -(1 - tau) * log(1 - tau) -
+        -(1 - tau) * log1p(-tau) -
           tau * log(tau) +
           (1 - tau) * digamma(lam * (1 - tau) / sig) +
           tau * digamma(lam * tau / sig) -
           digamma(lam / sig)
       ) * lam / sig)
-
+    
     lsth2 <-
-      sum(w * (-lsth -
-      (
+      -lsth -
+      sum(w * (
         (1 - tau)^2 * trigamma(lam * (1 - tau) / sig) +
-          tau*2 * trigamma(lam * tau / sig) -
+          tau^2 * trigamma(lam * tau / sig) -
           trigamma(lam / sig)
-      ) * lam^2 / sig^2))
-
+      ) * lam^2 / sig^2)
+    
     list(ls=ls, ## saturated log likelihood
          lsth1=lsth, ## first deriv vector w.r.t theta - last element relates to scale, if free
          lsth2=lsth2) ## Hessian w.r.t. theta, last row/col relates to scale, if free

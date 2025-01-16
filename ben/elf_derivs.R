@@ -66,3 +66,46 @@ sum(abs(dd1$EDeta2 - dd2$EDeta2))
 sum(abs(dd1$Deta.Deta2 - dd2$Deta.Deta2))
 sum(abs(dd1$Deta.EDeta2 - dd2$Deta.EDeta2))
 
+#################################
+n <- 1e4
+dat <- mgcv::gamSim(1, n = n, dist = "normal", scale = 10)
+y <- dat$y
+f <- dat$f
+
+
+fam1$ls(y, f, theta = log(sig), scale = 1)
+fam2$ls(y,  f, theta = log(sig), scale = 1)
+
+thetas <- seq(-2, 2, length = 100)
+ls1 <- ls2 <- rep(NA, 100)
+for(i in 1:100){
+  ls1[i] <- fam1$ls(y, f, theta = thetas[i], scale = 1)$ls
+  ls2[i] <- fam2$ls(y, f, theta = thetas[i], scale = 1)$ls
+}
+
+plot(thetas, ls1, type = "l")
+lines(thetas, ls2, col = 2, lty = 2)
+
+
+thetas <- seq(-2, 2, length = 100)
+ls1 <- lsth <- rep(NA, 100)
+for(i in 1:100){
+  ls1[i] <- fam1$ls(y, f, theta = thetas[i], scale = 1)$ls
+  lsth[i] <- fam1$ls(y, f, theta = thetas[i], scale = 1)$lsth1
+}
+
+plot(thetas, lsth, type = "l")
+lines((thetas[1:99] + thetas[2:100]) / 2,(ls1[2:100] - ls1[1:99]) / (thetas[2] - thetas[1]), col = 2, lty = 2)
+
+
+thetas <- seq(-2, 2, length = 100)
+lsth <- lsth2 <- rep(NA, 100)
+for(i in 1:100){
+  lsth[i] <- fam1$ls(y, f, theta = thetas[i], scale = 1)$lsth1
+  lsth2[i] <- fam1$ls(y, f, theta = thetas[i], scale = 1)$lsth2
+}
+
+plot(thetas, lsth2, type = "l")
+lines((thetas[1:99] + thetas[2:100]) / 2,(lsth[2:100] - lsth[1:99]) / (thetas[2] - thetas[1]), col = 2, lty = 2)
+
+# elf second gradient is positive, clearly should be negative
