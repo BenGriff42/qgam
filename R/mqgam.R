@@ -79,7 +79,7 @@
 #'
 mqgam <- function(form, data, qu, discrete = FALSE, lsig = NULL, err = NULL, 
                   multicore = !is.null(cluster), cluster = NULL, ncores = detectCores() - 1, paropts = list(),
-                  control = list(), argGam = NULL)
+                  control = list(), argGam = NULL, err_dist = "shash")
 {
   nq <- length(qu)
   
@@ -110,7 +110,7 @@ mqgam <- function(form, data, qu, discrete = FALSE, lsig = NULL, err = NULL,
   if( is.null(lsig) ) { # Selecting the learning rate sigma OR ....
     learn <- tuneLearnFast(form = form, data = data, err = err, qu = qu, discrete = discrete,
                            multicore = multicore, cluster = cluster, ncores = ncores, paropts = paropts,
-                           control = ctrl, argGam = argGam)
+                           control = ctrl, argGam = argGam, err_dist = err_dist)
     lsig <- learn$lsig
     err <- learn$err # Over-writing err parameters!
     out[["calibr"]] <- learn

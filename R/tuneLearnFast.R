@@ -139,7 +139,7 @@
 #'
 tuneLearnFast <- function(form, data, qu, discrete = FALSE, err = NULL,
                           multicore = !is.null(cluster), cluster = NULL, ncores = detectCores() - 1, paropts = list(),
-                          control = list(), argGam = NULL)
+                          control = list(), argGam = NULL, err_dist = "shash")
 { 
   discrete <- .should_we_use_discrete(form = form, discrete = discrete)
   
@@ -285,7 +285,7 @@ tuneLearnFast <- function(form, data, qu, discrete = FALSE, err = NULL,
   # Here we need bTol > aTol, otherwise the new bracket will be too close to the probable solution
   bTol <- 4*ctrl$aTol
   
-  if( is.null(err) ){ err <- .getErrParam(qu = qu, gFit = gausFit, varHat = varHat) }
+  if( is.null(err) ){ err <- .getErrParam(qu = qu, gFit = gausFit, varHat = varHat, dist = err_dist) }
   
   if(ctrl$progress){ cat("Estimating learning rate. Each dot corresponds to a loss evaluation. \n") }
   for(ii in 1:nq)

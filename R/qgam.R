@@ -105,7 +105,7 @@
 #'
 qgam <- function(form, data, qu, discrete = FALSE, lsig = NULL, err = NULL, 
                  multicore = !is.null(cluster), cluster = NULL, ncores = detectCores() - 1, paropts = list(),
-                 control = list(), argGam = NULL)
+                 control = list(), argGam = NULL, err_dist = "shash")
 {
   if( length(qu) > 1 ) stop("length(qu) > 1, so you should use mqgam()")
   
@@ -133,7 +133,7 @@ qgam <- function(form, data, qu, discrete = FALSE, lsig = NULL, err = NULL,
   initM <- tmp$initM
   
   # Get loss smoothness
-  if( is.null(err) ){ err <- .getErrParam(qu = qu, gFit = gausFit, varHat = varHat) }
+  if( is.null(err) ){ err <- .getErrParam(qu = qu, gFit = gausFit, varHat = varHat, dist = err_dist) }
 
   # Selecting the learning rate sigma
   learn <- NULL

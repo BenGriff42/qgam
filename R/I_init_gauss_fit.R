@@ -35,6 +35,7 @@
   # Provide initialisation for fitted quantiles
   initM <- lapply(qu, function(q){
     mustart <- qnorm(q, as.matrix(gFit$fitted.values)[, 1], sqrt(varHat))
+    if (ctrl$link == "log") mustart <- pmax(qnorm(q, as.matrix(gFit$fitted.values)[, 1], sqrt(varHat)), 0.01)
     # Get initial regression coefficients, several cases to cover:
     # [A]: we do not model the variance and we have an intercept in the mean model
     # [B] We do model the variance and/or there is no intercept in the mean model
